@@ -1,0 +1,306 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#include<stdbool.h>
+
+// ---- liste de structure ----
+typedef struct Date{
+    int jour;
+    int mois;
+    int annee;
+}Date;
+typedef struct livre{
+    char *nom;
+    char *nom_editeur;
+    Date date;
+    _Bool empr;
+}livre;
+typedef struct emprunteur{
+    char *nom_emp;
+    char *prenom_emp;
+    int tele;
+    livre l;
+    Date date_debut;
+    Date date_retourne;
+}emprunteur;
+typedef struct liste{
+    livre L;
+    struct liste *suivant;
+    struct liste *precedent;
+}liste;
+typedef struct liste_emp{
+    emprunteur E;
+    struct liste_emp *suivant;
+    struct liste_emp *precedent;
+}liste_emp;
+
+// ---- Fonctions Livres ----
+liste *creer(livre );
+liste *fin(liste *);
+int recherche(liste *,char *,char *);
+liste *ajouter(liste *);
+void affiche(liste *);
+liste *recherche_pos(liste *,char *,char *);
+void supprimer(liste *,char *,char *);
+livre remplir_livre();
+// ---- fonctions Emprunteur ----
+liste_emp *creer_emp(liste *,liste_emp *,emprunteur );
+liste_emp *fin_empr(liste_emp *);
+emprunteur remplir_empr();
+liste_emp *recherche_empr(liste_emp *,char *,char *);
+void emprunter(liste *lis,liste_emp *,char *,char *);
+
+
+// ---- créer et initialiser un livre ----
+liste *creer(livre l){
+    liste *nouv;
+    nouv=(liste *)malloc(sizeof(liste));
+    nouv->L.nom=(char *)malloc(15);
+    nouv->L.nom_editeur=(char *)malloc(15);
+    strcpy(nouv->L.nom,l.nom);
+    strcpy(nouv->L.nom_editeur,l.nom_editeur);
+    nouv->L.date.jour=l.date.jour;
+    nouv->L.date.mois=l.date.mois;
+    nouv->L.date.annee=l.date.annee;
+    nouv->L.empr=false;
+    nouv->suivant=NULL;
+    nouv->precedent=NULL;
+    return nouv;
+}
+
+// ---- rechercher la fin de la liste livre  ----
+liste *fin(liste *lis){
+    liste *tmp=lis;
+    while(tmp->suivant!=NULL)
+        tmp=tmp->suivant;
+    return tmp;
+}
+
+// ---- rchercher l'existance d'un livre ----
+int recherche(liste *lis,char *nom,char *nom_edit){
+    liste *tmp=lis;
+    int d=0;
+    while(tmp!=NULL){
+        if(strcmp(tmp->L.nom,nom)==0 && strcmp(tmp->L.nom_editeur,nom_edit)==0)
+            d=1;
+        tmp=tmp->suivant;
+    }
+    return d;
+}
+
+// ----remplir les données d'un livre ----
+livre remplir_livre(){
+    livre l;
+    l.nom=(char *)malloc(15);
+    l.nom_editeur=(char *)malloc(15);
+    printf("\tdonner le nom           : ");
+    scanf("%s",l.nom);
+    printf("\tdonner le nom d editeur : ");
+    scanf("%s",l.nom_editeur);
+    printf("\tsonner la date en jj-mm-aaaa : ");
+    scanf("%d-%d-%d",&l.date.jour,&l.date.mois,&l.date.annee);
+    return l;
+}
+
+// ---- ajouter un livre ----
+liste *ajouter(liste *lis){
+    livre l=remplir_livre();
+    liste *nouv=creer(l);
+    if(lis==NULL) lis=nouv;
+    else{
+        if(recherche(lis,l.nom,l.nom_editeur)==0){
+            liste *tmp=fin(lis);
+            tmp->suivant=nouv;
+            nouv->precedent=tmp;
+        }
+        else{
+            printf("\tle livre est deja existe \n");
+        }
+    }
+    return lis;
+}
+
+// ---- afficher les livres ----
+void affiche(liste *lis){
+    liste *tmp=lis;
+    while(tmp!=NULL){
+        printf("\tnom             :   %s\n",tmp->L.nom);
+        printf("\tnom d editeur   :   %s\n",tmp->L.nom_editeur);
+        printf("\tdate est        :   %d/%d/%d\n",tmp->L.date.jour,tmp->L.date.mois,tmp->L.date.annee);
+        tmp=tmp->suivant;
+    }
+}
+
+// ---- recherchee l'adresse d'un livre ----
+liste *recherche_pos(liste *lis,char *nom,char *nom_edit){
+    liste *tmp=lis;
+    while(tmp!=NULL){
+        if(strcmp(tmp->L.nom,nom)==0 && strcmp(tmp->L.nom_editeur,nom_edit)==0)
+            return tmp;
+        tmp=tmp->suivant;
+    }
+    return NULL;
+}
+
+// ---- supprimer un livre ----
+void supprimer(liste *lis,char *nom,char *nom_edit){
+    liste *tmp=recherche_pos(lis,nom,nom_edit);
+    if(tmp==lis){
+        lis=tmp->suivant;
+        printf("\tnom   :   %s\n",lis->L.nom);
+        printf("\tnom d editeur   :   %s\n",lis->L.nom_editeur);
+        lis->precedent=NULL;
+        free(tmp);
+    }
+    else if(tmp==fin(lis)){
+        tmp->precedent->suivant=NULL;
+        tmp->precedent=NULL;
+        free(tmp);
+    }
+    else{
+        tmp->suivant->precedent=tmp->precedent;
+        tmp->precedent->suivant=tmp->suivant;
+        free(tmp);
+    }
+}
+
+// ---- créer et initialiser un emprunteur ----
+liste_emp *creer_emp(liste *lis,liste_emp *list,emprunteur e1){
+    liste_emp *nouv;
+    nouv=(liste_emp *)malloc(sizeof(liste_emp));
+    nouv->E.nom_emp=(char *)malloc(15);
+    nouv->E.prenom_emp=(char *)malloc(15);
+    nouv->E.l.nom=(char *)malloc(15);
+    nouv->E.l.nom_editeur=(char *)malloc(15);
+    strcpy(nouv->E.nom_emp,e1.nom_emp);
+    strcpy(nouv->E.prenom_emp,e1.prenom_emp);
+    strcpy(nouv->E.l.nom,e1.l.nom);
+    strcpy(nouv->E.l.nom_editeur,e1.l.nom_editeur);
+    nouv->E.tele=e1.tele;
+    liste *tmp=recherche_pos(lis,e1.l.nom,e1.l.nom_editeur);
+    nouv->E.l.date.jour=tmp->L.date.jour;
+    nouv->E.l.date.mois=tmp->L.date.mois;
+    nouv->E.l.date.annee=tmp->L.date.annee;
+    nouv->E.date_debut.jour=e1.date_debut.jour;
+    nouv->E.date_debut.mois=e1.date_debut.mois;
+    nouv->E.date_debut.annee=e1.date_debut.annee;
+    nouv->E.date_retourne.jour=e1.date_retourne.jour;
+    nouv->E.date_retourne.mois=e1.date_retourne.mois;
+    nouv->E.date_retourne.annee=e1.date_retourne.annee;
+    nouv->E.l.empr=false;
+    nouv->suivant=NULL;
+    nouv->precedent=NULL;
+    return nouv;
+}
+
+// ---- rechercher la fin de la liste emprunteur ----
+liste_emp *fin_empr(liste_emp *list){
+    liste_emp *tmp=list;
+    while(tmp->suivant!=NULL)
+        tmp=tmp->suivant;
+    return tmp;
+}
+
+// ---- rmplir les données d'un emprunteur ----
+emprunteur remplir_empr(){
+    emprunteur e;
+    e.nom_emp=(char *)malloc(15);
+    e.prenom_emp=(char *)malloc(15);
+    printf("\tdonner votre nom           : ");
+    scanf("%s",e.nom_emp);
+    printf("\tdonner votre prenom        : ");
+    scanf("%s",e.prenom_emp);
+    printf("\tsonner la date d haujourd' hui en jj-mm-aaaa : ");
+    scanf("%d-%d-%d",&e.date_debut.jour,&e.date_debut.mois,&e.date_debut.annee);
+    printf("\tsonner la date de retourne en jj-mm-aaaa : ");
+    scanf("%d-%d-%d",&e.date_retourne.jour,&e.date_retourne.mois,&e.date_retourne.annee);
+    return e;
+}
+
+// ---- rechercher l'adresse-liste d'un emprunteur ----
+liste_emp *recherche_empr(liste_emp *list,char *nom,char *nom_edit){
+    liste_emp *tmp=list;
+    while(tmp!=NULL){
+        if(strcmp(tmp->E.l.nom,nom)==0 && strcmp(tmp->E.l.nom_editeur,nom_edit)==0)
+            return tmp;
+        tmp=tmp->suivant;
+    }
+    return NULL;
+}
+
+// ----emprunter un livre ----
+void emprunter(liste *lis,liste_emp *list,char *nom,char *nom_edit){
+    liste *tmp=recherche_pos(lis,nom,nom_edit);
+    if(tmp->L.empr==false){
+        emprunteur e=remplir_empr();
+        liste_emp *nouv=creer_emp(lis,list,e);
+        if(list==NULL)  list=nouv;
+        else{
+            liste_emp *temp=fin_empr(list);
+            temp->suivant=nouv;
+            nouv->precedent=temp;
+        }
+    }
+    else{
+        Date d;
+        printf("\tsonner la date d haujourd' hui en jj-mm-aaaa : ");
+        scanf("%d-%d-%d",&d.jour,&d.mois,&d.annee);
+        liste_emp *l=recherche_empr(list,nom,nom_edit);
+        if(l->E.date_retourne.jour<d.jour){
+            printf("\tappeler %d pour retourner le livre\n",l->E.tele);
+        }
+        else{
+            printf("\tretourner en %d/%d/%d\n",l->E.date_retourne.jour+1,l->E.date_retourne.mois,l->E.date_retourne.annee);
+        }
+    }
+}
+
+
+// ---- fonction main ----
+int main(){
+    liste *lis;
+    liste_emp *list;
+    livre l;
+    int choix;
+    char *nom=(char *)malloc(15);
+    char *nom_edit=(char *)malloc(15);
+    while(1){
+        system("CLS");
+        // effectuer un choix  
+        printf("\t.....................................................................................................................................................\n");
+        printf("\t:   1- Ajouter une livre    :   2- Afficher tous les livres    :   3- supprimer un livre    :  4-empprunter un livre  :    5- Fermer le programme    :\n");
+        printf("\t:...........................:..................................:............................:.........................:..............................:\n");
+        printf("\tdonner votre choix : ");
+        scanf("%d",&choix);
+        switch(choix){
+            case 1 :
+                lis=ajouter(lis);
+                break;
+            case 2 :
+                affiche(lis);
+                printf("\n\t\tcontinue  .  .  .");getch();
+                break;
+            case 3 :
+                printf("\tdonner le nom : ");
+                scanf("%s",nom);
+                printf("\tdonner le nom d editeur : ");
+                scanf("%s",nom_edit);
+                supprimer(lis,nom,nom_edit);
+                break;
+            case 4 :
+                printf("\tdonner le nom : ");
+                scanf("%s",nom);
+                printf("\tdonner le nom d editeur : ");
+                scanf("%s",nom_edit);
+                emprunter(lis,list,nom,nom_edit);
+                break;
+            case 5 :
+                return 0;
+                break;
+            default :
+                printf("\n\terreur !!!!!\n");
+                printf("\n\t\tcontinue  .  .  .");getch();
+        }
+    }
+    return 0;
+}
